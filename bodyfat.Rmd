@@ -1,0 +1,96 @@
+---
+title: "body fat"
+author: "chenyu jiang"
+date: "2024-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls())
+data <- read.csv("BodyFat.csv")
+```
+
+```{r}
+# find the wrong line of BMI
+# first turn the units of weight and height
+data$WEIGHT_kg <-data$WEIGHT * 0.453592  # Convert the unit of weight to kilograms
+data$HEIGHT_m <-data$HEIGHT * 0.0254  # Convert  the unit of height to meters
+data$ADIPOSITY_calculated <- data$WEIGHT_kg / (data$HEIGHT_m ^2)
+
+# Identify mismatches where calculated BMI and provided BMI are not within the tolerance
+tolerance <- 0.1
+data$mismatch <- abs(data$ADIPOSITY_calculated - data$ADIPOSITY) > tolerance
+
+# Print the rows with mismatches
+mismatches <- data[data$mismatch, ]
+print(mismatches)
+```
+```{r}
+#correct the height_m
+incorrect_rows <- which(data$mismatch == TRUE)
+data_clean <- data
+data_clean$HEIGHT_m[incorrect_rows] <- sqrt(data_clean$WEIGHT_kg[incorrect_rows]/data_clean$ADIPOSITY[incorrect_rows])
+print(data_clean[incorrect_rows,])
+```
+$BMI=\frac{weight(kg)}{height(m)^2}$
+$\text{percent body fat from Siri equation: }PBF = \frac{495}{Density}-450$
+
+```{r}
+# find the wrong data of body fat and correct it with density
+wrong_bodyfat <- data[data$BODYFAT < 5,]
+wrong_bodyfat$correct_bodyfat <- (495/wrong_bodyfat$DENSITY) - 450
+print(wrong_bodyfat)
+```
+
+
+```{r}
+#but we can see the data are bad, so we use another formula from wikipedia
+wrong_bodyfat$correct_bodyfat_bmi <- (1.2*wrong_bodyfat$ADIPOSITY) +(0.23*wrong_bodyfat$AGE) - 5.4 -10.8
+```
+
+$ \text{Adult body fat percentage} = (1.2 \times \text{BMI}) + (0.23 \times \text{age}) -(10.8 \times \text{sex})-5.4) \text{where sex is 0 for females and 1 for males}$
+
+
+
+
+```{r}
+wrong_bodyfat
+```
+
+```{r}
+data_clean2 <- data_clean[, !(names(data_clean) %in% c("WEIGHT", "HEIGHT","ADIPOSITY_calculated","mismatch"))]
+wrong_inbodyfat <- which(data$BODYFAT < 5)
+data_clean2$BODYFAT[wrong_inbodyfat] <- (1.2*data$ADIPOSITY[wrong_inbodyfat]) +(0.23*data$AGE[wrong_inbodyfat]) - 5.4 - 10.8
+```
+
+```{r}
+write.csv2(data_clean2,"data_clean 2")
+```
+
+
+```{r}
+data_use <- data_clean2[, !(names(data_clean2) %in% c("IDNO","DENSITY"))]
+```
+
+
+
+
+```{r}
+write.csv(data_clean,"data_clean with correct height")
+```
+
+```{r}
+data_use <- data_clean[, !(names(data_clean) %in% c("IDNO", "BODYFAT","DENSITY","WEIGHT","HEIGHT","ADIPOSITY_calculated","mismatch"))] 
+
+
+```
+
+
+```{r}
+
+```
+
