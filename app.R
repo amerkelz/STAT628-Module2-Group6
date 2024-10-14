@@ -1,7 +1,8 @@
 library(shiny)
 library(bslib)
 library(ggplot2)
-
+library(tidyr)
+library(dplyr)
 # Define UI for app ----
 ui <- page_fluid(
   titlePanel("Male Body Fat Estimator - STAT 628 Group 6"),
@@ -22,8 +23,8 @@ ui <- page_fluid(
           inputId = "var1",
           label = "Factor1",
           min = 1,
-          max = 50,
-          value = 30
+          max = 100,
+          value = 80
           ),
         textOutput(outputId = 'var1Warning')
         ),
@@ -33,7 +34,7 @@ ui <- page_fluid(
           label = "Factor2",
           min = 1,
           max = 50,
-          value = 30
+          value = 20
           ),
           textOutput(outputId = 'var2Warning')
         ),
@@ -77,10 +78,42 @@ server <- function(input, output) {
   })
   
   #display contour plot
+  data_clean2 <- read.csv("data_clean_2.csv",sep=";",dec=",")
+  
+  data <- data_clean2
+  model <- lm(BODYFAT ~ WRIST + ABDOMEN, data = data)
+  # Create grid data for plotting
+  grid_data <- expand.grid(
+    WRIST = seq(min(data$WRIST), max(data$WRIST), length.out = 100),
+    ABDOMEN = seq(min(data$ABDOMEN), max(data$ABDOMEN), length.out = 100)
+  )
+  
+  # Predict body fat values for the grid
+  grid_data$predicted_body_fat <- predict(model, newdata = grid_data)
+  grid_data <- grid_data %>%
+    mutate(body_fat_category = case_when(
+      predicted_body_fat > 20 ~ "Obese (>20%)",
+      predicted_body_fat >= 13 & predicted_body_fat <= 20 ~ "Standard (13%-20%)",
+      predicted_body_fat >= 5 & predicted_body_fat < 13 ~ "Lean (5%-13%)",
+      TRUE ~ "Underweight (<5%)"  # Include an additional category if needed
+    ))
+  
   output$BodyFatPlot <- renderPlot({
-    set.seed(1)
-    df <- data.frame(x=rnorm(200),y=rnorm(200))
-    ggplot(df, aes(x=x,y=y)) + geom_density2d_filled()
+    
+    ggplot(grid_data, aes(x = ABDOMEN, y = WRIST)) +
+      geom_tile(aes(fill = body_fat_category)) +  
+      geom_contour(aes(z = predicted_body_fat), color = "black", size = 0.5) +  
+      scale_fill_manual(values = c("Lean (5%-13%)" = "blue", 
+                                   "Standard (13%-20%)" = "purple", 
+                                   "Obese (>20%)" = "red"),
+                        name = "Body Fat Category") +
+      labs(title = "Estimated Body Fat Percentage",
+           x = "Abdomen(cm)",
+           y = "Wrist  (cm)") +
+      theme_minimal() +
+      theme(
+        axis.title.y = element_text(angle = 360, vjust = 0.5, hjust = 0.5)  # rotate y axis lable
+      ) + geom_point(aes(x=input$var1,input$var2,size=20,color='white'))
   })
 }
 
