@@ -39,15 +39,7 @@ lines(predicted, upper_bound_50percent, col = "darkgrey", lty = 2, lwd = 2)
 within_20_percent <- sum(percent_error <= 20)
 cat("Number of points within 20% of the true value:", within_20_percent)
 
-x = c(60, 148,84,100) # New abdomen values
-y= c(50, 164,72,91)   # New weight values
-
-predict<--36.92449-0.31034*y+0.87924*x
-predict
-
-#QQ-plot and residual plot
-qqnorm(resid(model),main="Normal Q-Q plot of (ABDOMEN+WEIGHT_kg)",col="lightblue",pch=19)
-qqline(resid(model,col="darkgrey"))
+#residual plot
 par(mar = c(5, 10, 5, 5)) 
 plot(fitted(model),resid(model),main = "Residual plot of ABDOMEN+WEIGHT_kg",xlab="Fitted values(BodyFat(%))",ylab="",pch =19, las = 1,col="lightblue")
 mtext("Residuals", side=2, line=3, las=1)
