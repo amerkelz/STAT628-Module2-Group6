@@ -6,5 +6,6 @@ To use this repository:
 1. pull the contents.
 2. move the data folder contents into the code folder.
 3. run 'Final Code.Rmd'. This will output the results used.
-4. the app folder contains all code and data used by the Shiny app hosted at: https://amerkelz.shinyapps.io/module2_app/ 
+4. the app folder contains all code and data used by the Shiny app hosted at: https://amerkelz.shinyapps.io/module2_app/
+    - data_clean_2_for_shiny.csv is a copy of the data clean 2 dataframe used in 'Final Code.Rmd', saved off separately for deploying with the app
     - NOTE: if you use this code to deploy your own Shiny app, please update the author content information to your own.
